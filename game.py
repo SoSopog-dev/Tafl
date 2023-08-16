@@ -16,18 +16,18 @@ class Tafl():
 
     def get_initial_valid_moves(self, state, player):
         valid_moves = []
+        ilegal_squares = [0,10, 110,120]
+        mid = [60]
+        f = self.check_fortress(state)
         state = state.reshape(1, -1)
         c = 0
-        len_state = 120 - 1#TODO fix this 
+        len_state = 121#TODO fix this 
         for i in range(len_state):
             if player == -1:
                 white = True
             else:
                 white = False
-            f = self.check_fortress(state)
-            print(f)
-            if not state[0,i] == -2 and f == (True, False):
-                    
+            if not (state[0,i] == -2 and f[0] == True and f[1] == False): 
                 if state[0,i] == player or (white == True and state[0,i] < 0):
                     
                     
@@ -63,7 +63,21 @@ class Tafl():
                             valid_moves.append((i,c))
                         else:
                             s = False
-        return valid_moves  
+        king = np.argwhere(state == -2)[0][1]          
+        print(f" THis is the king: {king}")
+
+        i = 0
+
+        while i < len(valid_moves):
+            move = valid_moves[i]
+            if move[1] in ilegal_squares and move[0] != king:
+                valid_moves.pop(i)
+                print(f"this move :{move} is ilegal FBI open up!!")
+            if move[1] in mid:
+                valid_moves.pop(i)
+                print(f"no center for you boi {move}")
+            i += 1
+        return valid_moves
                 
                 
     def get_valid_moves(self, state, action):
@@ -142,10 +156,13 @@ class Tafl():
         adjacent_positions = [(row - 1, col), (row + 1, col), (row, col - 1), (row, col + 1)]
         return [pos for pos in adjacent_positions if self.is_valid_position(pos)]
     
-    def check_fortress(self, state):
+    def check_fortress(self, n_state):
+        state = n_state.copy()
         win = False
         king = np.argwhere(state == -2)[0]
+        print(king)
         positions = self.get_adjacent_positions(king)
+        print(positions)
         while len(positions) > 0:
             for pos in positions:
                 if state[pos] == 0:
@@ -158,6 +175,7 @@ class Tafl():
                     return False, win
                 else:
                     positions.pop(positions.index(pos))
+        print("eh")
         return True, win
                 
 
@@ -217,17 +235,17 @@ class Tafl():
 
 t = Tafl()  
 
-test1 = np.matrix([[ 0, 0, 0, 1,-1, 0, 0, 0, 0, 0, 0],
+test1 = np.matrix([[ 0, 0, 0, 0,-1, 0, 0, 0, 0, 0, 0],
+                   [ 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0],
+                   [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 
                    [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-                   [ 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0], 
-                   [ 0, 0, 0, 0, 0,-1,-1, 0, 0, 0, 0],
-                   [ 0, 0, 0, 0,-1,-2, 0,-1, 0, 0, 0], 
-                   [ 0, 0, 0, 0, 1,-1,-1, 0, 0, 0, 0],
+                   [-2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 
+                   [ 0, 0, 0,-1, 0, 0, 0, 0, 0, 0, -1],
                    [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 
                    [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
                    [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
                    [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-                   [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]])
+                   [ 0, 0, 0, 0, 0, 0, 0, 0, 0,-1, 0]])
 
 #print(t.get_initial_valid_moves(test1, 1))
 
@@ -241,8 +259,7 @@ while run:
         a = int(input())
         b = int(input())
         action = (a,b)
-        n_state = state.copy()
-        result = t.get_value_and_terminated(n_state, action, player)
+        result = t.get_value_and_terminated(state, action, player)
         print(result)
 
         print(f"--------------------------------\n this is after the result \n--------------------------------\n")
