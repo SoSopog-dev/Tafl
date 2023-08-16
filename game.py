@@ -24,39 +24,45 @@ class Tafl():
                 white = True
             else:
                 white = False
-            if state[0,i] == player or (white and state[0,i]):
-                c = i
-                s = True
-                while (c - 11) > -1 and s == True:
-                    c -= 11 
-                    if state[0,c] == 0:
-                        valid_moves.append((i,c))
-                    else:
-                        s = False
-                c = i
-                s = True
-                while (c + 11) < len_state and s == True:
-                    c += 11
-                    if state[0,c] == 0:
-                        valid_moves.append((i,c))
-                    else:
-                        s = False
-                c = i
-                s = True
-                while (c+1)//11 == i//11 and s == True:
-                    c += 1
-                    if state[0,c] == 0:
-                        valid_moves.append((i,c))
-                    else:
-                        s = False
-                c = i
-                s = True
-                while (c-1)//11 == i//11 and s == True:
-                    c -= 1
-                    if state[0,c] == 0:
-                        valid_moves.append((i,c))
-                    else:
-                        s = False
+            f = self.check_fortress(state)
+            print(f)
+            if not state[0,i] == -2 and f == (True, False):
+                    
+                if state[0,i] == player or (white == True and state[0,i] < 0):
+                    
+                    
+                    c = i
+                    s = True
+                    while (c - 11) > -1 and s == True:
+                        c -= 11 
+                        if state[0,c] == 0:
+                            valid_moves.append((i,c))
+                        else:
+                            s = False
+                    c = i
+                    s = True
+                    while (c + 11) < len_state and s == True:
+                        c += 11
+                        if state[0,c] == 0:
+                            valid_moves.append((i,c))
+                        else:
+                            s = False
+                    c = i
+                    s = True
+                    while (c+1)//11 == i//11 and s == True:
+                        c += 1
+                        if state[0,c] == 0:
+                            valid_moves.append((i,c))
+                        else:
+                            s = False
+                    c = i
+                    s = True
+                    while (c-1)//11 == i//11 and s == True:
+                        c -= 1
+                        if state[0,c] == 0:
+                            valid_moves.append((i,c))
+                        else:
+                            s = False
         return valid_moves  
                 
                 
@@ -71,6 +77,12 @@ class Tafl():
         a_row = a%11
         
 
+    def get_colour(a):
+        if a <0:
+            return -1
+        if a > 0:
+            return 1
+
 
 
     def check_for_captures(self, state, action):
@@ -78,28 +90,44 @@ class Tafl():
         state = state.reshape(1, -1)
         b = action[1]
         b_t = state[0,b]
-        if b - 1 > 0  and (b-2)//11 == b//11 and state[0,b-1] == -b_t and state[0,b-2] == b_t:
-            remove.append(b-1)
-        if b + 1 < 120 - 1 and(b+2)//11 == b//11  and state[0,b+1] == -b_t and state[0,b+2] == b_t:
-            remove.append(b+1)
-        if b - 11 > 11  and state[0,b-11] == -b_t and state[0,b-22] == b_t:
-            remove.append(b-11)
-        if b + 11 < 120 - 11  and state[0,b+11] == -b_t and state[0,b+22] == b_t:
-            remove.append(b+11)
+        if b - 1 > 0  and (b-2)//11 == b//11:
+            if b_t <0:
+                if state[0,b-1] > 0 and state[0,b-2] <0:
+                    remove.append(b-1)
+            else:
+                if state[0,b-1] == -b_t and state[0,b-2] == b_t:
+                   remove.append(b-1) 
+
+        if b + 1 < 120 - 1 and(b+2)//11 == b//11:
+            if b_t <0:
+                if state[0,b+1] > 0 and state[0,b+2] <0:
+                    remove.append(b+1)
+            else:
+                if state[0,b+1] == -b_t and state[0,b+2] == b_t:
+                   remove.append(b+1) 
+
+        if b - 11 > 11:
+            if b_t <0:
+                if state[0,b-11] > 0 and state[0,b-22] <0:
+                    remove.append(b-11)
+            else:
+                if state[0,b-11] == -b_t and state[0,b-22] == b_t:
+                   remove.append(b-11) 
+        if b + 11 < 120 - 11:
+            if b_t <0:
+                if state[0,b+11] > 0 and state[0,b+22] <0:
+                    remove.append(b+11)
+            else:
+                if state[0,b+11] == -b_t and state[0,b+22] == b_t:
+                   remove.append(b+11) 
         return remove
 
-
-    def get_next_state(self, state, action):
-        print(f"\n {state}\n")
-        state = state.reshape(1,-1)
-        print(f" this is the action: {action}, \n {state} \n")
-        print(action[0])
+    def get_next_state(self, n_state, action):
+        state = (n_state.reshape(1,-1)).copy()
         p = state[0,action[0]]
-        print(p)
         state[0,action[0]] = 0
         state[0, action[1]] = p
         remove = self.check_for_captures(state, action)
-        print(f"\n {state}\n")
         for r in remove:
             state[0,r] = 0
         state = state.reshape(11, 11)
@@ -136,7 +164,6 @@ class Tafl():
     def check_win(self, state, action, player):
 
         n_state = self.get_next_state(state, action)
-        print(f" \n ---\n {n_state} \n --- \n")
         king = np.argwhere(n_state == -2)[0]
         print(king)
         #King check
@@ -145,7 +172,8 @@ class Tafl():
             if any((king == corner).all() for corner in corner_positions):
                 print("The king has escaped")
                 return True
-            if self.check_fortress(n_state)[1]:
+            fortress = self.check_fortress(n_state) 
+            if fortress[0] and fortress[1]:
                 print("The king has a fortress")
                 return True
             return False
@@ -189,12 +217,12 @@ class Tafl():
 
 t = Tafl()  
 
-test1 = np.matrix([[ 0,-2, 0, 1, 0, 0, 0, 0, 0, 0, 0],
-                   [ 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0],
-                   [ 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0], 
-                   [ 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0],
-                   [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 
-                   [ 0, 0, 0, 0, 0, 0, 0,-1, 0, 0, 0],
+test1 = np.matrix([[ 0, 0, 0, 1,-1, 0, 0, 0, 0, 0, 0],
+                   [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                   [ 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0], 
+                   [ 0, 0, 0, 0, 0,-1,-1, 0, 0, 0, 0],
+                   [ 0, 0, 0, 0,-1,-2, 0,-1, 0, 0, 0], 
+                   [ 0, 0, 0, 0, 1,-1,-1, 0, 0, 0, 0],
                    [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 
                    [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
                    [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -209,7 +237,7 @@ state = test1
 run = True
 player = 1
 while run:
-    if player == -1:
+    if player == 1:
         a = int(input())
         b = int(input())
         action = (a,b)
@@ -217,22 +245,26 @@ while run:
         result = t.get_value_and_terminated(n_state, action, player)
         print(result)
 
-        print(f"--------------------------------\n this is after the result \n --------------------------------\n")
+        print(f"--------------------------------\n this is after the result \n--------------------------------\n")
 
         state = t.get_next_state(state, action)
         
         if result[1]:
-            print("White has won")
+            print(f" {player} has won")
             run = False
     else:
+        print(f"Player is {player}")
         moves = t.get_initial_valid_moves(state, player)
         print(moves)
-        r = randint(0, len(moves))
+        r = randint(0, len(moves)-1)
         result = t.get_value_and_terminated(state, moves[r], player)
         state = t.get_next_state(state, moves[r])
         
         if result[1]:
-            print("Black has won")
+            print(f" {player} has won")
             run = False
     print(state)
     player *= -1
+
+
+
